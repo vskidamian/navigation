@@ -7,39 +7,45 @@ import {
   useFormContext,
 } from "react-hook-form";
 import { Empty } from "@/components/Empty";
-import { MenuForm } from "@/type";
-import { MenuItem } from "@/components/MenuItem";
+import { Menu } from "@/type";
+import { Group } from "@/components/Group";
 
 export default function Home() {
-  const methods = useForm<MenuForm>({
+  const methods = useForm<Menu>({
     defaultValues: {
-      menuItems: [],
+      groups: [],
     },
   });
 
   return (
     <FormProvider {...methods}>
-      <MenuItems />
+      <Groups />
     </FormProvider>
   );
 }
 
-export const MenuItems = () => {
-  const { control, getValues } = useFormContext<MenuForm>();
+export const Groups = () => {
+  const { control, getValues } = useFormContext<Menu>();
 
-  const { fields: menuItems, append } = useFieldArray({
+  const {
+    fields: groups,
+    append,
+    remove,
+  } = useFieldArray({
     control,
-    name: "menuItems",
+    name: "groups",
   });
 
-  console.log(getValues());
+  console.log("Groups", getValues());
 
   return (
-    <>
+    <div>
       <Empty append={append} />
-      {menuItems.map((item, index) => (
-        <MenuItem key={item.id} index={index} />
-      ))}
-    </>
+      <div className="flex flex-col space-y-8">
+        {groups.map((group, groupIndex) => (
+          <Group key={group.id} groupIndex={groupIndex} removeGroup={remove} />
+        ))}
+      </div>
+    </div>
   );
 };

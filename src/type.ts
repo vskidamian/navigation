@@ -1,17 +1,19 @@
-export type MenuItem = {
+export type Group = Item[];
+
+export type Item = {
   name: string;
   link: string;
   state: "edit" | "done";
-  items: MenuItem[];
+  items: Item[];
 };
 
-export const InitialMenuItemState: MenuItem = {
+export const InitialItemState: Item = {
   name: "",
   link: "",
   state: "edit",
   items: [],
 };
 
-export type MenuForm = {
-  menuItems: MenuItem[];
+export type Menu = {
+  groups: Group[];
 };
