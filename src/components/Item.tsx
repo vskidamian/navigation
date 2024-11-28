@@ -1,15 +1,11 @@
 "use client";
 
-import { InitialItemState, Menu } from "@/type";
+import { InitialItemState, Menu, TItem } from "@/type";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  UseFieldArrayAppend,
-  UseFieldArrayRemove,
-  useForm,
-  useFormContext,
-  useWatch,
-} from "react-hook-form";
+import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
+import { Groups } from "./Group";
+import { DeleteIcon } from "./icons/DeleteIcon";
 import { Button } from "./ui/button";
 import {
   Form,
@@ -20,9 +16,6 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import Image from "next/image";
-import { DeleteIcon } from "./icons/DeleteIcon";
-import { ChevronRight } from "lucide-react";
 
 const itemFormSchema = z.object({
   name: z.string().min(1, {
@@ -33,28 +26,28 @@ const itemFormSchema = z.object({
 
 type ItemProps = {
   groupIndex: number;
-  itemIndex: number;
-  append?: UseFieldArrayAppend<Menu, `groups.${number}`>;
-  removeItem?: UseFieldArrayRemove;
-  removeGroup?: UseFieldArrayRemove;
+  addNewGroup: () => void;
+  removeGroup: (groupIndex: number) => () => void;
+  prefix: string;
 };
 
 export const Item = ({
   groupIndex,
-  itemIndex,
-  append,
-  removeItem,
+  addNewGroup,
   removeGroup,
+  prefix,
 }: ItemProps) => {
   const { control, getValues } = useFormContext<Menu>();
 
-  const item = useWatch({ control, name: `groups.${groupIndex}.${itemIndex}` });
+  const item = useWatch({ control, name: prefix } as never);
 
-  const handleRemoveItem = () => {
-    removeItem?.(itemIndex);
+  console.log("item", item, prefix);
 
-    if (getValues().groups[groupIndex].length === 0) removeGroup?.(groupIndex);
-  };
+  // const handleRemoveItem = () => {
+  //   removeGroup?.(itemIndex);
+
+  //   if (getValues().groups[groupIndex].length === 0) removeGroup?.(groupIndex);
+  // };
 
   return (
     <div>
@@ -62,39 +55,40 @@ export const Item = ({
         <div className="px-6 py-4 bg-secondary">
           <ItemForm
             groupIndex={groupIndex}
-            itemIndex={itemIndex}
-            handleRemoveItem={handleRemoveItem}
+            prefix={prefix}
+            addNewGroup={addNewGroup}
+            removeGroup={removeGroup}
           />
         </div>
       ) : (
         <ItemDone
           groupIndex={groupIndex}
-          itemIndex={itemIndex}
-          append={append}
-          handleRemoveItem={handleRemoveItem}
+          prefix={prefix}
+          addNewGroup={addNewGroup}
+          removeGroup={removeGroup}
         />
       )}
     </div>
   );
 };
 
-type ItemFormProps = ItemProps & {
-  handleRemoveItem: () => void;
-};
+type ItemFormProps = ItemProps;
+
 export const ItemForm = ({
   groupIndex,
-  itemIndex,
-  handleRemoveItem,
+  prefix,
+  addNewGroup,
+  removeGroup,
 }: ItemFormProps) => {
   const { control, setValue } = useFormContext<Menu>();
 
   const item = useWatch({
     control,
-    name: `groups.${groupIndex}.${itemIndex}`,
-  });
+    name: prefix,
+  } as never) as TItem;
 
   const onSubmit = (values: z.infer<typeof itemFormSchema>) => {
-    setValue(`groups.${groupIndex}.${itemIndex}`, {
+    setValue(prefix as `groups.${number}.${number}`, {
       ...InitialItemState,
       ...values,
       state: "done",
@@ -110,7 +104,7 @@ export const ItemForm = ({
     const isAdded = item && item.name !== "";
 
     if (isAdded) {
-      setValue(`groups.${groupIndex}.${itemIndex}`, {
+      setValue(prefix as `groups.${number}.${number}`, {
         ...item,
         state: "done",
       });
@@ -126,7 +120,7 @@ export const ItemForm = ({
       <Button
         variant="ghost"
         className="absolute h-10 w-10 p-0 top-5 right-8"
-        onClick={handleRemoveItem}
+        onClick={() => removeGroup?.(groupIndex)}
       >
         <DeleteIcon />
       </Button>
@@ -172,30 +166,33 @@ export const ItemForm = ({
   );
 };
 
-type ItemDoneProps = ItemProps & {
-  handleRemoveItem: () => void;
-};
+type ItemDoneProps = ItemProps;
 
 export const ItemDone = ({
   groupIndex,
-  itemIndex,
-  handleRemoveItem,
+  prefix,
+  removeGroup,
 }: ItemDoneProps) => {
   const { control, setValue } = useFormContext<Menu>();
 
   const item = useWatch({
     control,
-    name: `groups.${groupIndex}.${itemIndex}`,
-  });
+    name: prefix,
+  } as never) as TItem;
 
   const handleEditItem = () => {
-    setValue(`groups.${groupIndex}.${itemIndex}`, {
+    setValue(prefix as `groups.${number}.${number}`, {
       ...item,
       state: "edit",
     });
   };
 
-  const handleAddItem = () => {};
+  const handleAddItem = () => {
+    setValue(prefix as `groups.${number}.${number}`, {
+      ...item,
+      groups: [...item.groups, InitialItemState],
+    });
+  };
 
   return (
     <div className="flex items-center justify-between p-4 bg-white rounded-tl-md rounded-tr-md border-b">
@@ -205,7 +202,7 @@ export const ItemDone = ({
       </div>
 
       <div className="flex items-center border rounded-md">
-        <Button variant="secondary" onClick={handleRemoveItem}>
+        <Button variant="secondary" onClick={() => removeGroup(groupIndex)}>
           Usuń
         </Button>
         <span className="h-9 w-px bg-border" aria-hidden="true" />
@@ -217,6 +214,8 @@ export const ItemDone = ({
           Dodaj pozycję menu
         </Button>
       </div>
+
+      <Groups prefix={prefix} />
     </div>
   );
 };

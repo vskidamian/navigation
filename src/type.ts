@@ -1,17 +1,17 @@
-export type Group = Item[];
+export type Group = TItem[];
 
-export type Item = {
+export type TItem = {
   name: string;
   link: string;
   state: "edit" | "done";
-  items: Item[];
+  groups: Group;
 };
 
-export const InitialItemState: Item = {
+export const InitialItemState: TItem = {
   name: "",
   link: "",
   state: "edit",
-  items: [],
+  groups: [],
 };
 
 export type Menu = {
