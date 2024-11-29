@@ -1,10 +1,10 @@
 "use client";
 
+import { useMenuFormFields } from "@/lib/form";
 import { InitialItemState, Menu, TItem } from "@/type";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
-import { Groups } from "./Group";
 import { DeleteIcon } from "./icons/DeleteIcon";
 import { Button } from "./ui/button";
 import {
@@ -25,23 +25,27 @@ const itemFormSchema = z.object({
 });
 
 type ItemProps = {
-  groupIndex: number;
+  index: number;
   addNewGroup: () => void;
-  removeGroup: (groupIndex: number) => () => void;
+  removeGroup: (index: number) => () => void;
   prefix: string;
+  depth: number;
+  test?: boolean;
 };
 
 export const Item = ({
-  groupIndex,
+  index,
   addNewGroup,
   removeGroup,
   prefix,
+  depth,
+  test,
 }: ItemProps) => {
-  const { control, getValues } = useFormContext<Menu>();
+  const { control } = useFormContext<Menu>();
 
   const item = useWatch({ control, name: prefix } as never);
 
-  console.log("item", item, prefix);
+  if (test) console.log("❌ item", { item, index, prefix });
 
   // const handleRemoveItem = () => {
   //   removeGroup?.(itemIndex);
@@ -50,22 +54,24 @@ export const Item = ({
   // };
 
   return (
-    <div>
+    <div style={{ paddingLeft: depth > 0 ? `28px` : "0" }}>
       {item.state === "edit" ? (
-        <div className="px-6 py-4 bg-secondary">
+        <div className='px-6 py-4 bg-secondary'>
           <ItemForm
-            groupIndex={groupIndex}
+            index={index}
             prefix={prefix}
             addNewGroup={addNewGroup}
             removeGroup={removeGroup}
+            depth={depth}
           />
         </div>
       ) : (
         <ItemDone
-          groupIndex={groupIndex}
+          index={index}
           prefix={prefix}
           addNewGroup={addNewGroup}
           removeGroup={removeGroup}
+          depth={depth}
         />
       )}
     </div>
@@ -74,12 +80,7 @@ export const Item = ({
 
 type ItemFormProps = ItemProps;
 
-export const ItemForm = ({
-  groupIndex,
-  prefix,
-  addNewGroup,
-  removeGroup,
-}: ItemFormProps) => {
+export const ItemForm = ({ index, prefix, removeGroup }: ItemFormProps) => {
   const { control, setValue } = useFormContext<Menu>();
 
   const item = useWatch({
@@ -88,6 +89,7 @@ export const ItemForm = ({
   } as never) as TItem;
 
   const onSubmit = (values: z.infer<typeof itemFormSchema>) => {
+    //@ts-expect-error TODO: fix
     setValue(prefix as `groups.${number}.${number}`, {
       ...InitialItemState,
       ...values,
@@ -104,6 +106,7 @@ export const ItemForm = ({
     const isAdded = item && item.name !== "";
 
     if (isAdded) {
+      //@ts-expect-error TODO: fix
       setValue(prefix as `groups.${number}.${number}`, {
         ...item,
         state: "done",
@@ -116,25 +119,25 @@ export const ItemForm = ({
   };
 
   return (
-    <div className="px-6 py-5 flex flex-col bg-white border-border border-[1px] rounded-md relative">
+    <div className='px-6 py-5 flex flex-col bg-white border-border border-[1px] rounded-md relative'>
       <Button
-        variant="ghost"
-        className="absolute h-10 w-10 p-0 top-5 right-8"
-        onClick={() => removeGroup?.(groupIndex)}
+        variant='ghost'
+        className='absolute h-10 w-10 p-0 top-5 right-8'
+        onClick={() => removeGroup?.(index)}
       >
         <DeleteIcon />
       </Button>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="flex flex-col space-y-2 pb-5 pr-20 ">
+          <div className='flex flex-col space-y-2 pb-5 pr-20 '>
             <FormField
               control={form.control}
-              name="name"
+              name='name'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nazwa</FormLabel>
                   <FormControl>
-                    <Input placeholder="np. Promocje" {...field} />
+                    <Input placeholder='np. Promocje' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -142,23 +145,23 @@ export const ItemForm = ({
             />
             <FormField
               control={form.control}
-              name="link"
+              name='link'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Link</FormLabel>
                   <FormControl>
-                    <Input placeholder="Wklej lub wyszukaj" {...field} />
+                    <Input placeholder='Wklej lub wyszukaj' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <div className="flex flex-row gap-2 ">
-            <Button type="button" variant="outline" onClick={cancelHandler}>
+          <div className='flex flex-row gap-2 '>
+            <Button type='button' variant='outline' onClick={cancelHandler}>
               Anuluj
             </Button>
-            <Button type="submit">Dodaj</Button>
+            <Button type='submit'>Dodaj</Button>
           </div>
         </form>
       </Form>
@@ -168,12 +171,9 @@ export const ItemForm = ({
 
 type ItemDoneProps = ItemProps;
 
-export const ItemDone = ({
-  groupIndex,
-  prefix,
-  removeGroup,
-}: ItemDoneProps) => {
+export const ItemDone = ({ index, prefix, depth }: ItemDoneProps) => {
   const { control, setValue } = useFormContext<Menu>();
+  const { fields, addNewGroup, removeGroup } = useMenuFormFields(prefix);
 
   const item = useWatch({
     control,
@@ -181,41 +181,53 @@ export const ItemDone = ({
   } as never) as TItem;
 
   const handleEditItem = () => {
+    //@ts-expect-error TODO: fix
     setValue(prefix as `groups.${number}.${number}`, {
       ...item,
       state: "edit",
     });
   };
 
-  const handleAddItem = () => {
-    setValue(prefix as `groups.${number}.${number}`, {
-      ...item,
-      groups: [...item.groups, InitialItemState],
-    });
-  };
+  // const handleAddItem = () => {
+  //   //@ts-expect-error TODO: fix
+  //   setValue(prefix as `groups.${number}.${number}`, {
+  //     ...item,
+  //     groups: [...item.groups, InitialItemState],
+  //   });
+  // };
 
   return (
-    <div className="flex items-center justify-between p-4 bg-white rounded-tl-md rounded-tr-md border-b">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-        <p className="text-sm ">{item.link}</p>
-      </div>
+    <div>
+      <div className='flex items-center justify-between p-4 bg-white rounded-tl-md rounded-tr-md border-b'>
+        <div>
+          <h3 className='text-lg font-semibold text-gray-800'>{item.name}</h3>
+          <p className='text-sm '>{item.link}</p>
+        </div>
 
-      <div className="flex items-center border rounded-md">
-        <Button variant="secondary" onClick={() => removeGroup(groupIndex)}>
-          Usuń
-        </Button>
-        <span className="h-9 w-px bg-border" aria-hidden="true" />
-        <Button variant="secondary" onClick={handleEditItem}>
-          Edytuj
-        </Button>
-        <span className="h-9 w-px bg-border" aria-hidden="true" />
-        <Button variant="secondary" onClick={handleAddItem}>
-          Dodaj pozycję menu
-        </Button>
+        <div className='flex items-center border rounded-md'>
+          <Button variant='secondary' onClick={removeGroup(index)}>
+            Usuń
+          </Button>
+          <span className='h-9 w-px bg-border' aria-hidden='true' />
+          <Button variant='secondary' onClick={handleEditItem}>
+            Edytuj
+          </Button>
+          <span className='h-9 w-px bg-border' aria-hidden='true' />
+          <Button variant='secondary' onClick={addNewGroup}>
+            Dodaj pozycję menu
+          </Button>
+        </div>
       </div>
-
-      <Groups prefix={prefix} />
+      {fields.map((item, index) => (
+        <Item
+          key={item.id}
+          index={index}
+          prefix={`${prefix}groups.${index}.`}
+          depth={depth + 1}
+          addNewGroup={addNewGroup}
+          removeGroup={removeGroup}
+        />
+      ))}
     </div>
   );
 };

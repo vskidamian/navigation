@@ -1,10 +1,8 @@
-export type Group = TItem[];
-
 export type TItem = {
   name: string;
   link: string;
   state: "edit" | "done";
-  groups: Group;
+  groups?: TItem[];
 };
 
 export const InitialItemState: TItem = {
@@ -15,5 +13,5 @@ export const InitialItemState: TItem = {
 };
 
 export type Menu = {
-  groups: Group[];
+  groups: TItem[];
 };

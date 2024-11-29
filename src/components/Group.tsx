@@ -10,24 +10,31 @@ type GroupsProps = {
 };
 
 export const Groups = ({ prefix = "" }: GroupsProps) => {
+  const isInitialState = prefix === "";
   const { fields, addNewGroup } = useMenuFormFields(prefix);
-
-  console.log("fields", fields, prefix);
 
   return (
     <>
-      {fields.length === 0 && !prefix && <Empty addNewGroup={addNewGroup} />}
+      {fields.length === 0 && isInitialState && (
+        <Empty addNewGroup={addNewGroup} />
+      )}
       {fields.length ? (
-        <div className="flex flex-col space-y-8">
+        <div className='flex flex-col space-y-8'>
           {fields.map((group, groupIndex) => (
             <Group
               key={group.id}
               groupIndex={groupIndex}
               prefix={`${prefix}groups.${groupIndex}.`}
+              depth={0}
             />
           ))}
         </div>
       ) : null}
+      {isInitialState && fields.length > 0 && (
+        <div className='flex justify-center items-center mt-6'>
+          <Button onClick={addNewGroup}>Dodaj pozycję menu</Button>
+        </div>
+      )}
     </>
   );
 };
@@ -35,32 +42,38 @@ export const Groups = ({ prefix = "" }: GroupsProps) => {
 type GroupProps = {
   groupIndex: number;
   prefix: string;
+  depth: number;
 };
 
-export const Group = ({ groupIndex, prefix }: GroupProps) => {
+export const Group = ({ groupIndex, prefix, depth }: GroupProps) => {
   const { fields, addNewGroup, removeGroup } = useMenuFormFields(prefix);
 
-  console.log("fields in group", fields);
+  console.log(`Group-${groupIndex}`, { fields, prefix });
 
   return (
-    <div className="border rounded-md">
+    <div className='border rounded-md'>
       <Item
-        groupIndex={groupIndex}
+        index={groupIndex}
         addNewGroup={addNewGroup}
         removeGroup={removeGroup}
         prefix={prefix}
+        depth={depth}
       />
-      {fields.map((item, itemIndex) => (
-        <Item
-          key={item.id}
-          groupIndex={itemIndex}
-          addNewGroup={addNewGroup}
-          removeGroup={removeGroup}
-          prefix={prefix}
-        />
-      ))}
-      <div className="bg-transparent px-6 py-4">
-        <Button variant="secondary" onClick={addNewGroup}>
+      <div>
+        {fields.map((item, itemIndex) => (
+          <Item
+            key={item.id}
+            index={itemIndex}
+            addNewGroup={addNewGroup}
+            removeGroup={removeGroup}
+            prefix={`${prefix}groups.${itemIndex}.`}
+            test={true}
+            depth={depth}
+          />
+        ))}
+      </div>
+      <div className='bg-transparent px-6 py-4'>
+        <Button variant='secondary' onClick={addNewGroup}>
           Dodaj pozycję menu
         </Button>
       </div>

@@ -11,6 +11,8 @@ export default function Home() {
     },
   });
 
+  console.log("✅", methods.watch());
+
   return (
     <FormProvider {...methods}>
       <Groups />
