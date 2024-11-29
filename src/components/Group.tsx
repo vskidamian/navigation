@@ -1,41 +1,34 @@
 "use client";
 
 import { useMenuFormFields } from "@/lib/form";
-import { Empty } from "./Empty";
 import { Item } from "./Item";
 import { Button } from "./ui/button";
 
 type GroupsProps = {
   prefix?: string;
+  index: number;
 };
 
-export const Groups = ({ prefix = "" }: GroupsProps) => {
-  const isInitialState = prefix === "";
-  const { fields, addNewGroup } = useMenuFormFields(prefix);
+export const Groups = ({ prefix = "", index }: GroupsProps) => {
+  // const { fields } = useMenuFormFields(prefix);
 
   return (
-    <>
-      {fields.length === 0 && isInitialState && (
-        <Empty addNewGroup={addNewGroup} />
-      )}
-      {fields.length ? (
-        <div className='flex flex-col space-y-8'>
-          {fields.map((group, groupIndex) => (
-            <Group
-              key={group.id}
-              groupIndex={groupIndex}
-              prefix={`${prefix}groups.${groupIndex}.`}
-              depth={0}
-            />
-          ))}
-        </div>
-      ) : null}
-      {isInitialState && fields.length > 0 && (
-        <div className='flex justify-center items-center mt-6'>
-          <Button onClick={addNewGroup}>Dodaj pozycję menu</Button>
-        </div>
-      )}
-    </>
+    <p>{index}</p>
+    // <>
+    //   {fields.length ? (
+    //     <div className='flex flex-col space-y-8'>
+    //       {fields.map((group, groupIndex) => (
+    //         <p key={group.id}>{groupIndex}</p>
+    //         // <Group
+    //         //   key={group.id}
+    //         //   groupIndex={groupIndex}
+    //         //   prefix={`${prefix}groups.${groupIndex}.`}
+    //         //   depth={0}
+    //         // />
+    //       ))}
+    //     </div>
+    //   ) : null}
+    // </>
   );
 };
 

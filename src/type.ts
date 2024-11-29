@@ -1,3 +1,12 @@
+export type Groups = {
+  groups: {
+    name: string;
+    link: string;
+    state: "edit" | "done";
+    groups?: TItem[];
+  }[];
+};
+
 export type TItem = {
   name: string;
   link: string;
@@ -13,5 +22,5 @@ export const InitialItemState: TItem = {
 };
 
 export type Menu = {
-  groups: TItem[];
+  menu: Groups[];
 };
