@@ -29,20 +29,29 @@ export default function Home() {
 
 const MenuGroups = () => {
   const { control } = useFormContext<Menu>();
-  const { fields, append } = useFieldArray({ control, name: "menu" });
+  const { fields, append, remove } = useFieldArray({ control, name: "menu" });
 
   const addNewGroup = () => {
-    append({ groups: [InitialItemState] });
+    append({ groups: [{ ...InitialItemState }] });
   };
 
-  console.log(fields);
+  const removeGroup = (index: number) => {
+    remove(index);
+  };
 
   return (
     <div>
       {fields.length === 0 && <Empty addNewGroup={addNewGroup} />}
-      {fields.map((field, index) => (
-        <Groups key={field.id} index={index} />
-      ))}
+      <div className='flex flex-col space-y-8'>
+        {fields.map((field, index) => (
+          <Groups
+            key={field.id}
+            index={index}
+            removeGroup={() => removeGroup(index)}
+          />
+        ))}
+      </div>
+
       {fields.length > 0 && (
         <div className='flex justify-center items-center mt-6'>
           <Button onClick={addNewGroup}>Dodaj pozycję menu</Button>

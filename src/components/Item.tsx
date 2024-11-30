@@ -25,18 +25,20 @@ const itemFormSchema = z.object({
 });
 
 type ItemProps = {
-  index: number;
-  addNewGroup: () => void;
-  removeGroup: (index: number) => () => void;
+  groupIndex: number;
+  itemIndex: number;
+  removeGroup: (index: number) => void;
+  removeItem: (index: number) => void;
   prefix: string;
   depth: number;
   test?: boolean;
 };
 
 export const Item = ({
-  index,
-  addNewGroup,
+  itemIndex,
+  groupIndex,
   removeGroup,
+  removeItem,
   prefix,
   depth,
   test,
@@ -45,32 +47,29 @@ export const Item = ({
 
   const item = useWatch({ control, name: prefix } as never);
 
-  if (test) console.log("❌ item", { item, index, prefix });
-
-  // const handleRemoveItem = () => {
-  //   removeGroup?.(itemIndex);
-
-  //   if (getValues().groups[groupIndex].length === 0) removeGroup?.(groupIndex);
-  // };
-
+  if (test) {
+    console.log("🤖", { item, prefix, groupIndex, itemIndex });
+  }
   return (
     <div style={{ paddingLeft: depth > 0 ? `28px` : "0" }}>
       {item.state === "edit" ? (
-        <div className='px-6 py-4 bg-secondary'>
+        <div className='px-6 py-4 bg-secondary rounded-md'>
           <ItemForm
-            index={index}
+            itemIndex={itemIndex}
+            groupIndex={groupIndex}
             prefix={prefix}
-            addNewGroup={addNewGroup}
             removeGroup={removeGroup}
+            removeItem={removeItem}
             depth={depth}
           />
         </div>
       ) : (
         <ItemDone
-          index={index}
+          itemIndex={itemIndex}
+          groupIndex={groupIndex}
           prefix={prefix}
-          addNewGroup={addNewGroup}
           removeGroup={removeGroup}
+          removeItem={removeItem}
           depth={depth}
         />
       )}
@@ -80,7 +79,11 @@ export const Item = ({
 
 type ItemFormProps = ItemProps;
 
-export const ItemForm = ({ index, prefix, removeGroup }: ItemFormProps) => {
+export const ItemForm = ({
+  prefix,
+  removeGroup,
+  groupIndex,
+}: ItemFormProps) => {
   const { control, setValue } = useFormContext<Menu>();
 
   const item = useWatch({
@@ -90,7 +93,7 @@ export const ItemForm = ({ index, prefix, removeGroup }: ItemFormProps) => {
 
   const onSubmit = (values: z.infer<typeof itemFormSchema>) => {
     //@ts-expect-error TODO: fix
-    setValue(prefix as `groups.${number}.${number}`, {
+    setValue(prefix as unknown, {
       ...InitialItemState,
       ...values,
       state: "done",
@@ -107,7 +110,7 @@ export const ItemForm = ({ index, prefix, removeGroup }: ItemFormProps) => {
 
     if (isAdded) {
       //@ts-expect-error TODO: fix
-      setValue(prefix as `groups.${number}.${number}`, {
+      setValue(prefix as unknown, {
         ...item,
         state: "done",
       });
@@ -118,12 +121,14 @@ export const ItemForm = ({ index, prefix, removeGroup }: ItemFormProps) => {
     form.reset(InitialItemState);
   };
 
+  // const deleteHandler = () => {}
+
   return (
     <div className='px-6 py-5 flex flex-col bg-white border-border border-[1px] rounded-md relative'>
       <Button
         variant='ghost'
         className='absolute h-10 w-10 p-0 top-5 right-8'
-        onClick={() => removeGroup?.(index)}
+        onClick={() => removeGroup?.(groupIndex)}
       >
         <DeleteIcon />
       </Button>
@@ -171,30 +176,40 @@ export const ItemForm = ({ index, prefix, removeGroup }: ItemFormProps) => {
 
 type ItemDoneProps = ItemProps;
 
-export const ItemDone = ({ index, prefix, depth }: ItemDoneProps) => {
-  const { control, setValue } = useFormContext<Menu>();
-  const { fields, addNewGroup, removeGroup } = useMenuFormFields(prefix);
+export const ItemDone = ({
+  itemIndex,
+  groupIndex,
+  prefix,
+  depth,
+  removeGroup,
+}: ItemDoneProps) => {
+  const { control, setValue, getValues } = useFormContext<Menu>();
+  const { fields, addNewItem, removeItem } = useMenuFormFields(prefix);
 
   const item = useWatch({
     control,
     name: prefix,
   } as never) as TItem;
 
+  console.log("🤖", { item, prefix, groupIndex });
+
   const handleEditItem = () => {
     //@ts-expect-error TODO: fix
-    setValue(prefix as `groups.${number}.${number}`, {
+    setValue(prefix as unknown, {
       ...item,
       state: "edit",
     });
   };
 
-  // const handleAddItem = () => {
-  //   //@ts-expect-error TODO: fix
-  //   setValue(prefix as `groups.${number}.${number}`, {
-  //     ...item,
-  //     groups: [...item.groups, InitialItemState],
-  //   });
-  // };
+  const handleRemove = () => {
+    //@ts-expect-error TODO: fix
+    if (!getValues(prefix) || getValues(prefix).groups.length === 0) {
+      removeGroup(groupIndex);
+      return;
+    }
+
+    removeItem(itemIndex);
+  };
 
   return (
     <div>
@@ -205,7 +220,7 @@ export const ItemDone = ({ index, prefix, depth }: ItemDoneProps) => {
         </div>
 
         <div className='flex items-center border rounded-md'>
-          <Button variant='secondary' onClick={removeGroup(index)}>
+          <Button variant='secondary' onClick={handleRemove}>
             Usuń
           </Button>
           <span className='h-9 w-px bg-border' aria-hidden='true' />
@@ -213,21 +228,21 @@ export const ItemDone = ({ index, prefix, depth }: ItemDoneProps) => {
             Edytuj
           </Button>
           <span className='h-9 w-px bg-border' aria-hidden='true' />
-          <Button variant='secondary' onClick={addNewGroup}>
+          <Button variant='secondary' onClick={addNewItem}>
             Dodaj pozycję menu
           </Button>
         </div>
       </div>
-      {fields.map((item, index) => (
+      {/* {fields.map((item, index) => (
         <Item
           key={item.id}
-          index={index}
+          itemIndex={index}
+          groupIndex={itemIndex}
           prefix={`${prefix}groups.${index}.`}
           depth={depth + 1}
-          addNewGroup={addNewGroup}
           removeGroup={removeGroup}
         />
-      ))}
+      ))} */}
     </div>
   );
 };

@@ -1,34 +1,37 @@
 "use client";
 
 import { useMenuFormFields } from "@/lib/form";
+import { Menu, TItem } from "@/type";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Item } from "./Item";
 import { Button } from "./ui/button";
 
 type GroupsProps = {
   prefix?: string;
   index: number;
+  removeGroup: (index: number) => void;
 };
 
-export const Groups = ({ prefix = "", index }: GroupsProps) => {
-  // const { fields } = useMenuFormFields(prefix);
+export const Groups = ({ prefix = "", index, removeGroup }: GroupsProps) => {
+  const { fields } = useMenuFormFields(`menu.${prefix}${index}.groups`);
 
+  console.log("first", fields);
   return (
-    <p>{index}</p>
-    // <>
-    //   {fields.length ? (
-    //     <div className='flex flex-col space-y-8'>
-    //       {fields.map((group, groupIndex) => (
-    //         <p key={group.id}>{groupIndex}</p>
-    //         // <Group
-    //         //   key={group.id}
-    //         //   groupIndex={groupIndex}
-    //         //   prefix={`${prefix}groups.${groupIndex}.`}
-    //         //   depth={0}
-    //         // />
-    //       ))}
-    //     </div>
-    //   ) : null}
-    // </>
+    <>
+      {fields.length ? (
+        <div className='flex flex-col space-y-8'>
+          {fields.map((group, groupIndex) => (
+            <Group
+              key={group.id}
+              groupIndex={groupIndex}
+              prefix={`menu.${prefix}${index}.groups.${groupIndex}`}
+              depth={0}
+              removeGroup={removeGroup}
+            />
+          ))}
+        </div>
+      ) : null}
+    </>
   );
 };
 
@@ -36,40 +39,49 @@ type GroupProps = {
   groupIndex: number;
   prefix: string;
   depth: number;
+  removeGroup: (index: number) => void;
 };
 
-export const Group = ({ groupIndex, prefix, depth }: GroupProps) => {
-  const { fields, addNewGroup, removeGroup } = useMenuFormFields(prefix);
+export const Group = ({
+  groupIndex,
+  prefix,
+  depth,
+  removeGroup,
+}: GroupProps) => {
+  const { control } = useFormContext<Menu>();
+  const { fields, removeItem, addNewItem } = useMenuFormFields(prefix);
 
-  console.log(`Group-${groupIndex}`, { fields, prefix });
+  const group = useWatch({
+    control,
+    name: prefix,
+  } as never) as TItem;
+
+  console.log(fields);
 
   return (
     <div className='border rounded-md'>
-      <Item
-        index={groupIndex}
-        addNewGroup={addNewGroup}
-        removeGroup={removeGroup}
-        prefix={prefix}
-        depth={depth}
-      />
       <div>
         {fields.map((item, itemIndex) => (
           <Item
             key={item.id}
-            index={itemIndex}
-            addNewGroup={addNewGroup}
+            groupIndex={groupIndex}
+            itemIndex={itemIndex}
             removeGroup={removeGroup}
-            prefix={`${prefix}groups.${itemIndex}.`}
+            removeItem={removeItem}
+            prefix={`${prefix}.${itemIndex}`}
             test={true}
             depth={depth}
           />
         ))}
       </div>
-      <div className='bg-transparent px-6 py-4'>
-        <Button variant='secondary' onClick={addNewGroup}>
-          Dodaj pozycję menu
-        </Button>
-      </div>
+
+      {group.state === "done" && (
+        <div className='bg-transparent px-6 py-4'>
+          <Button variant='secondary' onClick={addNewItem}>
+            Dodaj pozycję menu
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
