@@ -3,18 +3,18 @@ export type Groups = {
     name: string;
     link: string;
     state: "edit" | "done";
-    groups?: TItem[];
+    groups?: GroupItem[];
   }[];
 };
 
-export type TItem = {
+export type GroupItem = {
   name: string;
   link: string;
   state: "edit" | "done";
-  groups?: TItem[];
+  groups?: GroupItem[];
 };
 
-export const InitialItemState: TItem = {
+export const InitialItemState: GroupItem = {
   name: "",
   link: "",
   state: "edit",

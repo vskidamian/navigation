@@ -28,7 +28,7 @@ export default function Home() {
 }
 
 const MenuGroups = () => {
-  const { control } = useFormContext<Menu>();
+  const { control, getValues } = useFormContext<Menu>();
   const { fields, append, remove } = useFieldArray({ control, name: "menu" });
 
   const addNewGroup = () => {
@@ -36,25 +36,32 @@ const MenuGroups = () => {
   };
 
   const removeGroup = (index: number) => {
+    console.log("remove", index);
     remove(index);
   };
 
   return (
     <div>
+      <Button
+        className="mb-8"
+        onClick={() => console.log("✅GET VALUES", getValues())}
+      >
+        GET VALUES
+      </Button>
       {fields.length === 0 && <Empty addNewGroup={addNewGroup} />}
-      <div className='flex flex-col space-y-8'>
-        {fields.map((field, index) => (
+      <div id="menu-groups" className="flex flex-col space-y-8">
+        {fields.map((field, groupIndex) => (
           <Groups
             key={field.id}
-            index={index}
-            removeGroup={() => removeGroup(index)}
+            groupIndex={groupIndex}
+            removeGroup={() => removeGroup(groupIndex)}
           />
         ))}
       </div>
 
       {fields.length > 0 && (
-        <div className='flex justify-center items-center mt-6'>
-          <Button onClick={addNewGroup}>Dodaj pozycję menu</Button>
+        <div className="flex justify-center items-center mt-6">
+          <Button onClick={addNewGroup}>Dodaj grupę</Button>
         </div>
       )}
     </div>
