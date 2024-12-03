@@ -18,8 +18,6 @@ export default function Home() {
     },
   });
 
-  console.log("✅", methods.watch());
-
   return (
     <FormProvider {...methods}>
       <MenuGroups />
@@ -36,13 +34,13 @@ const MenuGroups = () => {
   };
 
   const removeGroup = (index: number) => {
-    console.log("remove", index);
     remove(index);
   };
 
   return (
     <div>
       <Button
+        variant="outline"
         className="mb-8"
         onClick={() => console.log("✅GET VALUES", getValues())}
       >
@@ -61,7 +59,7 @@ const MenuGroups = () => {
 
       {fields.length > 0 && (
         <div className="flex justify-center items-center mt-6">
-          <Button onClick={addNewGroup}>Dodaj grupę</Button>
+          <Button onClick={addNewGroup}>Dodaj pozycję menu</Button>
         </div>
       )}
     </div>

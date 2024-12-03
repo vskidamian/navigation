@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
+import { group } from "console";
 
 const itemFormSchema = z.object({
   name: z.string().min(1, {
@@ -59,6 +60,7 @@ export const Item = ({
       ...InitialItemState,
       ...values,
       state: "done",
+      groups: item.groups,
     });
   };
 
@@ -92,8 +94,6 @@ export const Item = ({
   };
 
   const handleRemove = () => {
-    console.log("remove");
-
     if (depth === 0) {
       const menuGroups = getValues(`menu.${groupIndex}.groups`);
 
@@ -101,17 +101,20 @@ export const Item = ({
         removeGroup(groupIndex);
         return;
       }
-
-      removeItem(itemIndex);
     }
 
     removeItem(itemIndex);
   };
 
   return (
-    <div id="item" style={{ paddingLeft: depth > 0 ? `28px` : "0" }}>
+    <div id="item" style={{ paddingLeft: depth > 0 ? `64px` : "0" }}>
       {item.state === "edit" ? (
-        <div className="px-6 py-4 bg-secondary rounded-md shadow-border">
+        <div
+          style={{
+            ...(depth === 0 && { padding: "1.25rem 1.5rem 1.25rem 1.5rem" }),
+          }}
+          className="pr-6 py-4 bg-secondary"
+        >
           <div className="px-6 py-5 flex flex-col bg-white shadow-border rounded-md relative">
             <Button
               variant="ghost"
@@ -165,42 +168,46 @@ export const Item = ({
           </div>
         </div>
       ) : (
-        <div>
-          <div className="flex items-center justify-between p-4 bg-white shadow-border  mb-[1px]">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                {item.name}
-              </h3>
-              <p className="text-sm ">{item.link}</p>
-            </div>
-
-            <div className="flex items-center shadow-border rounded-md">
-              <Button variant="secondary" onClick={handleRemove}>
-                Usuń
-              </Button>
-              <span className="h-9 w-px bg-border" aria-hidden="true" />
-              <Button variant="secondary" onClick={handleEditItem}>
-                Edytuj
-              </Button>
-              <span className="h-9 w-px bg-border" aria-hidden="true" />
-              <Button variant="secondary" onClick={addNewItem}>
-                Dodaj pozycję menu
-              </Button>
-            </div>
+        <div
+          className="flex items-center justify-between p-5 bg-white shadow-border mb-[1px]"
+          style={{
+            ...(item.groups?.length &&
+              depth > 0 && {
+                borderBottomLeftRadius: "calc(var(--radius) - 2px)",
+              }),
+          }}
+        >
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
+            <p className="text-sm ">{item.link}</p>
           </div>
-          {fields.map((item, index) => (
-            <Item
-              key={item.id}
-              itemIndex={index}
-              groupIndex={itemIndex}
-              prefix={`${prefix}.groups.${index}`}
-              depth={depth + 1}
-              removeGroup={removeGroup}
-              removeItem={removeItemToPass}
-            />
-          ))}
+
+          <div className="flex items-center shadow-border rounded-md">
+            <Button variant="secondary" onClick={handleRemove}>
+              Usuń
+            </Button>
+            <span className="h-9 w-px bg-border" aria-hidden="true" />
+            <Button variant="secondary" onClick={handleEditItem}>
+              Edytuj
+            </Button>
+            <span className="h-9 w-px bg-border" aria-hidden="true" />
+            <Button variant="secondary" onClick={addNewItem}>
+              Dodaj pozycję menu
+            </Button>
+          </div>
         </div>
       )}
+      {fields.map((item, index) => (
+        <Item
+          key={item.id}
+          itemIndex={index}
+          groupIndex={itemIndex}
+          prefix={`${prefix}.groups.${index}`}
+          depth={depth + 1}
+          removeGroup={removeGroup}
+          removeItem={removeItemToPass}
+        />
+      ))}
     </div>
   );
 };

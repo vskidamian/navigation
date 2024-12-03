@@ -7,16 +7,11 @@ import { Item } from "./Item";
 import { Button } from "./ui/button";
 
 type GroupsProps = {
-  prefix?: string;
   groupIndex: number;
   removeGroup: (index: number) => void;
 };
 
-export const Groups = ({
-  prefix = "",
-  groupIndex,
-  removeGroup,
-}: GroupsProps) => {
+export const Groups = ({ groupIndex, removeGroup }: GroupsProps) => {
   const { control } = useFormContext<Menu>();
   const { fields, addNewItem, removeItem } = useMenuFormFields(
     `menu.${groupIndex}.groups`
@@ -30,10 +25,9 @@ export const Groups = ({
   const isAnyGroupDone = groups.some((group) => group.state === "done");
 
   return (
-    <div className="flex flex-col border rounded-md">
-      {fields.length ? (
-        <div id="group">
-          {fields.map((group, index) => (
+    <div className="flex flex-col border rounded-md overflow-hidden">
+      {fields.length
+        ? fields.map((group, index) => (
             <Group
               key={group.id}
               itemIndex={index}
@@ -42,9 +36,8 @@ export const Groups = ({
               removeGroup={removeGroup}
               removeItem={removeItem}
             />
-          ))}
-        </div>
-      ) : null}
+          ))
+        : null}
       {isAnyGroupDone && (
         <div className="bg-transparent px-6 py-4">
           <Button variant="secondary" onClick={addNewItem}>
