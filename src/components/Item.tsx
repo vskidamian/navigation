@@ -17,6 +17,8 @@ import {
 } from "./ui/form";
 import { Input } from "./ui/input";
 import { group } from "console";
+import { Move } from "lucide-react";
+import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
 const itemFormSchema = z.object({
   name: z.string().min(1, {
@@ -32,6 +34,7 @@ type ItemProps = {
   removeItem: (index: number) => void;
   prefix: string;
   depth: number;
+  listeners?: SyntheticListenerMap;
 };
 
 export const Item = ({
@@ -39,6 +42,7 @@ export const Item = ({
   groupIndex,
   removeItem,
   removeGroup,
+  listeners,
   prefix,
   depth,
 }: ItemProps) => {
@@ -168,32 +172,44 @@ export const Item = ({
           </div>
         </div>
       ) : (
-        <div
-          className="flex items-center justify-between p-5 bg-white shadow-border mb-[1px]"
-          style={{
-            ...(item.groups?.length &&
-              depth > 0 && {
-                borderBottomLeftRadius: "calc(var(--radius) - 2px)",
-              }),
-          }}
-        >
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-            <p className="text-sm ">{item.link}</p>
-          </div>
+        <div className="flex p-5 bg-white shadow-border mb-[1px] ">
+          <Button
+            {...listeners}
+            size="icon"
+            variant="ghost"
+            className="p-[10px] mr-1"
+          >
+            <Move className="h-5 w-5" />
+          </Button>
+          <div
+            className="flex items-center justify-between w-full"
+            style={{
+              ...(item.groups?.length &&
+                depth > 0 && {
+                  borderBottomLeftRadius: "calc(var(--radius) - 2px)",
+                }),
+            }}
+          >
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {item.name}
+              </h3>
+              <p className="text-sm ">{item.link}</p>
+            </div>
 
-          <div className="flex items-center shadow-border rounded-md">
-            <Button variant="secondary" onClick={handleRemove}>
-              Usuń
-            </Button>
-            <span className="h-9 w-px bg-border" aria-hidden="true" />
-            <Button variant="secondary" onClick={handleEditItem}>
-              Edytuj
-            </Button>
-            <span className="h-9 w-px bg-border" aria-hidden="true" />
-            <Button variant="secondary" onClick={addNewItem}>
-              Dodaj pozycję menu
-            </Button>
+            <div className="flex items-center shadow-border rounded-md">
+              <Button variant="secondary" onClick={handleRemove}>
+                Usuń
+              </Button>
+              <span className="h-9 w-px bg-border" aria-hidden="true" />
+              <Button variant="secondary" onClick={handleEditItem}>
+                Edytuj
+              </Button>
+              <span className="h-9 w-px bg-border" aria-hidden="true" />
+              <Button variant="secondary" onClick={addNewItem}>
+                Dodaj pozycję menu
+              </Button>
+            </div>
           </div>
         </div>
       )}

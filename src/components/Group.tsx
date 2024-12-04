@@ -5,6 +5,8 @@ import { Menu, GroupItem } from "@/type";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Item } from "./Item";
 import { Button } from "./ui/button";
+import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
+import { Move } from "lucide-react";
 
 type GroupsProps = {
   groupIndex: number;
@@ -12,6 +14,10 @@ type GroupsProps = {
 };
 
 export const Groups = ({ groupIndex, removeGroup }: GroupsProps) => {
+  const { setNodeRef } = useDroppable({
+    id: `group-${groupIndex}`,
+  });
+
   const { control } = useFormContext<Menu>();
   const { fields, addNewItem, removeItem } = useMenuFormFields(
     `menu.${groupIndex}.groups`
@@ -25,32 +31,36 @@ export const Groups = ({ groupIndex, removeGroup }: GroupsProps) => {
   const isAnyGroupDone = groups.some((group) => group.state === "done");
 
   return (
-    <div className="flex flex-col border rounded-md overflow-hidden">
-      {fields.length
-        ? fields.map((group, index) => (
-            <Group
-              key={group.id}
-              itemIndex={index}
-              groupIndex={groupIndex}
-              prefix={`menu.${groupIndex}.groups.${index}`}
-              removeGroup={removeGroup}
-              removeItem={removeItem}
-            />
-          ))
-        : null}
-      {isAnyGroupDone && (
-        <div className="bg-transparent px-6 py-4">
-          <Button variant="secondary" onClick={addNewItem}>
-            Dodaj pozycję menu
-          </Button>
+    <DndContext>
+      <div className="flex flex-col border rounded-md overflow-hidden">
+        <div ref={setNodeRef}>
+          {fields.length
+            ? fields.map((group, index) => (
+                <Group
+                  key={group.id}
+                  index={index}
+                  groupIndex={groupIndex}
+                  prefix={`menu.${groupIndex}.groups.${index}`}
+                  removeGroup={removeGroup}
+                  removeItem={removeItem}
+                />
+              ))
+            : null}
         </div>
-      )}
-    </div>
+        {isAnyGroupDone && (
+          <div className="bg-transparent px-6 py-4">
+            <Button variant="secondary" onClick={addNewItem}>
+              Dodaj pozycję menu
+            </Button>
+          </div>
+        )}
+      </div>
+    </DndContext>
   );
 };
 
 type GroupProps = {
-  itemIndex: number;
+  index: number;
   groupIndex: number;
   prefix: string;
   removeGroup: (index: number) => void;
@@ -58,17 +68,33 @@ type GroupProps = {
 };
 
 export const Group = ({
-  itemIndex,
+  index,
   groupIndex,
   prefix,
   removeGroup,
   removeItem,
 }: GroupProps) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: `group-${index}`,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
   return (
-    <div className="bg-secondary rounded-md">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className="bg-secondary rounded-md"
+    >
       <Item
         groupIndex={groupIndex}
-        itemIndex={itemIndex}
+        itemIndex={index}
+        listeners={listeners}
         removeGroup={removeGroup}
         removeItem={removeItem}
         prefix={prefix}
