@@ -8,7 +8,7 @@ export const useMenuFormFields = (prefix: string) => {
 
   const groupsPath = prefix;
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace, update, move } = useFieldArray({
     control,
     name: groupsPath,
   } as never);
@@ -26,5 +26,8 @@ export const useMenuFormFields = (prefix: string) => {
     register,
     addNewItem,
     removeItem,
+    replaceItem: replace,
+    updateItem: update,
+    moveItem: move,
   };
 };
