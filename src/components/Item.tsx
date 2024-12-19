@@ -19,6 +19,15 @@ import { Input } from "./ui/input";
 import { group } from "console";
 import { Move } from "lucide-react";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
+import {
+  DndContext,
+  DragEndEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 
 const itemFormSchema = z.object({
   name: z.string().min(1, {
@@ -28,21 +37,21 @@ const itemFormSchema = z.object({
 });
 
 type ItemProps = {
+  id: string;
   groupIndex: number;
   itemIndex: number;
   removeGroup: (index: number) => void;
   removeItem: (index: number) => void;
   prefix: string;
   depth: number;
-  listeners?: SyntheticListenerMap;
 };
 
 export const Item = ({
+  id,
   itemIndex,
   groupIndex,
   removeItem,
   removeGroup,
-  listeners,
   prefix,
   depth,
 }: ItemProps) => {
@@ -51,7 +60,33 @@ export const Item = ({
     fields,
     removeItem: removeItemToPass,
     addNewItem,
+    moveItem,
   } = useMenuFormFields(`${prefix}.groups`);
+
+  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (over && active.id !== over.id) {
+      const activeIndex = fields.findIndex(({ id }) => id === active.id);
+      const overIndex = fields.findIndex(({ id }) => id === over.id);
+
+      if (activeIndex !== -1 && overIndex !== -1) {
+        moveItem(activeIndex, overIndex);
+      }
+    }
+  };
+
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id,
+    });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        transition,
+      }
+    : undefined;
 
   const item = useWatch({
     control,
@@ -111,119 +146,133 @@ export const Item = ({
   };
 
   return (
-    <div id="item" style={{ paddingLeft: depth > 0 ? `64px` : "0" }}>
-      {item.state === "edit" ? (
-        <div
-          style={{
-            ...(depth === 0 && { padding: "1.25rem 1.5rem 1.25rem 1.5rem" }),
-          }}
-          className="pr-6 py-4 bg-secondary"
-        >
-          <div className="px-6 py-5 flex flex-col bg-white shadow-border rounded-md relative">
-            <Button
-              variant="ghost"
-              className="absolute h-10 w-10 p-0 top-5 right-8"
-              onClick={() => removeGroup?.(groupIndex)}
-            >
-              <DeleteIcon />
-            </Button>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="flex flex-col space-y-2 pb-5 pr-20 ">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nazwa</FormLabel>
-                        <FormControl>
-                          <Input placeholder="np. Promocje" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="link"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Link</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Wklej lub wyszukaj" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex flex-row gap-2 ">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={cancelHandler}
-                  >
-                    Anuluj
-                  </Button>
-                  <Button type="submit">Dodaj</Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-        </div>
-      ) : (
-        <div className="flex p-5 bg-white shadow-border mb-[1px] ">
-          <Button
-            {...listeners}
-            size="icon"
-            variant="ghost"
-            className="p-[10px] mr-1"
-          >
-            <Move className="h-5 w-5" />
-          </Button>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <div
+        id="item"
+        className="rounded-md"
+        ref={setNodeRef}
+        {...attributes}
+        style={{ ...style, paddingLeft: depth > 0 ? `64px` : "0" }}
+      >
+        {item.state === "edit" ? (
           <div
-            className="flex items-center justify-between w-full"
             style={{
-              ...(item.groups?.length &&
-                depth > 0 && {
-                  borderBottomLeftRadius: "calc(var(--radius) - 2px)",
-                }),
+              ...(depth === 0 && { padding: "1.25rem 1.5rem 1.25rem 1.5rem" }),
             }}
+            className="pr-6 py-4 bg-secondary"
           >
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                {item.name}
-              </h3>
-              <p className="text-sm ">{item.link}</p>
-            </div>
-
-            <div className="flex items-center shadow-border rounded-md">
-              <Button variant="secondary" onClick={handleRemove}>
-                Usuń
+            <div className="px-6 py-5 flex flex-col bg-white shadow-border rounded-md relative">
+              <Button
+                variant="ghost"
+                className="absolute h-10 w-10 p-0 top-5 right-8"
+                onClick={handleRemove}
+              >
+                <DeleteIcon />
               </Button>
-              <span className="h-9 w-px bg-border" aria-hidden="true" />
-              <Button variant="secondary" onClick={handleEditItem}>
-                Edytuj
-              </Button>
-              <span className="h-9 w-px bg-border" aria-hidden="true" />
-              <Button variant="secondary" onClick={addNewItem}>
-                Dodaj pozycję menu
-              </Button>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                  <div className="flex flex-col space-y-2 pb-5 pr-20 ">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nazwa</FormLabel>
+                          <FormControl>
+                            <Input placeholder="np. Promocje" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="link"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Link</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Wklej lub wyszukaj"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex flex-row gap-2 ">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={cancelHandler}
+                    >
+                      Anuluj
+                    </Button>
+                    <Button type="submit">Dodaj</Button>
+                  </div>
+                </form>
+              </Form>
             </div>
           </div>
-        </div>
-      )}
-      {fields.map((item, index) => (
-        <Item
-          key={item.id}
-          itemIndex={index}
-          groupIndex={itemIndex}
-          prefix={`${prefix}.groups.${index}`}
-          depth={depth + 1}
-          removeGroup={removeGroup}
-          removeItem={removeItemToPass}
-        />
-      ))}
-    </div>
+        ) : (
+          <div className="flex p-5 bg-white shadow-border mb-[1px] ">
+            <Button
+              {...listeners}
+              size="icon"
+              variant="ghost"
+              className="p-[10px] mr-1"
+            >
+              <Move className="h-5 w-5" />
+            </Button>
+            <div
+              className="flex items-center justify-between w-full"
+              style={{
+                ...(item.groups?.length &&
+                  depth > 0 && {
+                    borderBottomLeftRadius: "calc(var(--radius) - 2px)",
+                  }),
+              }}
+            >
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {item.name}
+                </h3>
+                <p className="text-sm ">{item.link}</p>
+              </div>
+
+              <div className="flex items-center shadow-border rounded-md">
+                <Button variant="secondary" onClick={handleRemove}>
+                  Usuń
+                </Button>
+                <span className="h-9 w-px bg-border" aria-hidden="true" />
+                <Button variant="secondary" onClick={handleEditItem}>
+                  Edytuj
+                </Button>
+                <span className="h-9 w-px bg-border" aria-hidden="true" />
+                <Button variant="secondary" onClick={addNewItem}>
+                  Dodaj pozycję menu
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        <SortableContext items={fields.map((field) => field.id)}>
+          {fields.map((item, index) => (
+            <Item
+              id={item.id}
+              key={item.id}
+              itemIndex={index}
+              groupIndex={itemIndex}
+              prefix={`${prefix}.groups.${index}`}
+              depth={depth + 1}
+              removeGroup={removeGroup}
+              removeItem={removeItemToPass}
+            />
+          ))}
+        </SortableContext>
+      </div>
+    </DndContext>
   );
 };

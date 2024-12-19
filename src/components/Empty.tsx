@@ -11,7 +11,7 @@ export const Empty = ({ addNewGroup }: EmptyProps) => {
       <p className="text-sm leading-5 pb-6">
         W tym menu nie ma jeszcze żadnych linków.
       </p>
-      <Button onClick={addNewGroup}>Dodaj pozycję menu</Button>
+      <Button onClick={addNewGroup}>Dodaj nową grupę</Button>
     </div>
   );
 };
