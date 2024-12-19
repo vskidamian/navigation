@@ -2,9 +2,9 @@
 
 import { Empty } from "@/components/Empty";
 import { Groups } from "@/components/Groups";
+import { HelperButtons } from "@/components/HelperButtons";
 import { Button } from "@/components/ui/button";
 import { InitialItemState, Menu } from "@/type";
-import { DndContext } from "@dnd-kit/core";
 import {
   FormProvider,
   useFieldArray,
@@ -27,7 +27,7 @@ export default function Home() {
 }
 
 const MenuGroups = () => {
-  const { control, getValues, setValue } = useFormContext<Menu>();
+  const { control } = useFormContext<Menu>();
   const { fields, append, remove } = useFieldArray({ control, name: "menu" });
 
   const addNewGroup = () => {
@@ -38,34 +38,12 @@ const MenuGroups = () => {
     remove(index);
   };
 
+  const areFieldsEmpty = fields.length === 0;
+
   return (
     <div>
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          className="mb-8"
-          onClick={() => console.log("✅GET VALUES", getValues())}
-        >
-          GET VALUES
-        </Button>
-        <Button
-          variant="outline"
-          className="mb-8"
-          onClick={() =>
-            setValue("menu", [
-              {
-                groups: [
-                  { name: "1", link: "", state: "done", groups: [] },
-                  { name: "2", link: "", state: "done", groups: [] },
-                ],
-              },
-            ])
-          }
-        >
-          TEST VALUES
-        </Button>
-      </div>
-      {fields.length === 0 && <Empty addNewGroup={addNewGroup} />}
+      <HelperButtons />
+      {areFieldsEmpty && <Empty addNewGroup={addNewGroup} />}
       <div id="menu-groups" className="flex flex-col space-y-8">
         {fields.map((field, groupIndex) => (
           <Groups
@@ -76,7 +54,7 @@ const MenuGroups = () => {
         ))}
       </div>
 
-      {fields.length > 0 && (
+      {!areFieldsEmpty && (
         <div className="flex justify-center items-center mt-6">
           <Button onClick={addNewGroup}>Dodaj nową grupę</Button>
         </div>

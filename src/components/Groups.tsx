@@ -1,21 +1,22 @@
 "use client";
 
 import { useMenuFormFields } from "@/lib/form";
+import { handleDragEnd } from "@/lib/utils";
 import { GroupItem, Menu } from "@/type";
 import {
-  Active,
   DndContext,
-  DragEndEvent,
+  DragStartEvent,
   MouseSensor,
   TouchSensor,
+  UniqueIdentifier,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { SortableContext, useSortable } from "@dnd-kit/sortable";
-import { useMemo, useState } from "react";
+import { SortableContext } from "@dnd-kit/sortable";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Item } from "./Item";
 import { Button } from "./ui/button";
+import { useState } from "react";
 
 type GroupsProps = {
   groupIndex: number;
@@ -24,6 +25,12 @@ type GroupsProps = {
 
 export const Groups = ({ groupIndex, removeGroup }: GroupsProps) => {
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id);
+  };
 
   const { control } = useFormContext<Menu>();
   const { fields, addNewItem, removeItem, moveItem } = useMenuFormFields(
@@ -37,22 +44,14 @@ export const Groups = ({ groupIndex, removeGroup }: GroupsProps) => {
 
   const isAnyGroupDone = groups.some((group) => group.state === "done");
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    console.log({ active, over });
-    if (over && active.id !== over.id) {
-      const activeIndex = fields.findIndex(({ id }) => id === active.id);
-      const overIndex = fields.findIndex(({ id }) => id === over.id);
-
-      console.log({ activeIndex, overIndex });
-
-      if (activeIndex !== -1 && overIndex !== -1) {
-        moveItem(activeIndex, overIndex);
-      }
-    }
-  };
-
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={({ active, over }) =>
+        handleDragEnd({ active, over, fields, moveItem })
+      }
+    >
       <div className="flex flex-col border rounded-md overflow-hidden bg-secondary">
         <SortableContext items={fields.map((field) => field.id)}>
           {fields.length
