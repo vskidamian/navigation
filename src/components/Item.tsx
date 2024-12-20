@@ -6,7 +6,6 @@ import { GroupItem, InitialItemState, Menu } from "@/type";
 import {
   defaultDropAnimationSideEffects,
   DndContext,
-  DragOverlay,
   DragStartEvent,
   DropAnimation,
   MouseSensor,
@@ -15,9 +14,12 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Move } from "lucide-react";
+import { useState } from "react";
 import {
   FieldArrayWithId,
   useForm,
@@ -36,8 +38,6 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { useState } from "react";
-import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
 const itemFormSchema = z.object({
   name: z.string().min(1, {
@@ -81,15 +81,22 @@ export const Item = ({
 
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({
-      id,
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id,
+  });
 
   const style = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
         transition,
+        opacity: isDragging ? 0.65 : undefined,
       }
     : undefined;
 
@@ -127,13 +134,14 @@ export const Item = ({
     <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
+      modifiers={[restrictToVerticalAxis]}
       onDragEnd={({ active, over }) => {
         handleDragEnd({ active, over, fields, moveItem });
       }}
     >
       <div
-        id="item"
-        className="rounded-md"
+        id='item'
+        className='rounded-md'
         ref={setNodeRef}
         {...attributes}
         style={{
@@ -220,27 +228,27 @@ export const EditItem = ({ depth, prefix, handleRemove }: EditItemProps) => {
       style={{
         ...(depth === 0 && { padding: "1.25rem 1.5rem 1.25rem 1.5rem" }),
       }}
-      className="pr-6 py-4 bg-secondary"
+      className='pr-6 py-4 bg-secondary'
     >
-      <div className="px-6 py-5 flex flex-col bg-white shadow-border rounded-md relative">
+      <div className='px-6 py-5 flex flex-col bg-white shadow-border rounded-md relative'>
         <Button
-          variant="ghost"
-          className="absolute h-10 w-10 p-0 top-5 right-8"
+          variant='ghost'
+          className='absolute h-10 w-10 p-0 top-5 right-8'
           onClick={handleRemove}
         >
           <DeleteIcon />
         </Button>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="flex flex-col space-y-2 pb-5 pr-20 ">
+            <div className='flex flex-col space-y-2 pb-5 pr-20 '>
               <FormField
                 control={form.control}
-                name="name"
+                name='name'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nazwa</FormLabel>
                     <FormControl>
-                      <Input placeholder="np. Promocje" {...field} />
+                      <Input placeholder='np. Promocje' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -248,23 +256,23 @@ export const EditItem = ({ depth, prefix, handleRemove }: EditItemProps) => {
               />
               <FormField
                 control={form.control}
-                name="link"
+                name='link'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Link</FormLabel>
                     <FormControl>
-                      <Input placeholder="Wklej lub wyszukaj" {...field} />
+                      <Input placeholder='Wklej lub wyszukaj' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <div className="flex flex-row gap-2 ">
-              <Button type="button" variant="outline" onClick={cancelHandler}>
+            <div className='flex flex-row gap-2 '>
+              <Button type='button' variant='outline' onClick={cancelHandler}>
                 Anuluj
               </Button>
-              <Button type="submit">Dodaj</Button>
+              <Button type='submit'>Dodaj</Button>
             </div>
           </form>
         </Form>
@@ -300,17 +308,17 @@ export const DoneItem = ({
   };
 
   return (
-    <div className="flex p-5 bg-white shadow-border mb-[1px] h-20 z-10">
+    <div className='flex p-5 bg-white shadow-border mb-[1px] h-20 z-10'>
       <Button
         {...listeners}
-        size="icon"
-        variant="ghost"
-        className="p-[10px] mr-1"
+        size='icon'
+        variant='ghost'
+        className='p-[10px] mr-1'
       >
-        <Move className="h-5 w-5" />
+        <Move className='h-5 w-5' />
       </Button>
       <div
-        className="flex items-center justify-between w-full"
+        className='flex items-center justify-between w-full'
         style={{
           ...(item.groups?.length &&
             depth > 0 && {
@@ -319,20 +327,20 @@ export const DoneItem = ({
         }}
       >
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-          <p className="text-sm ">{item.link}</p>
+          <h3 className='text-lg font-semibold text-gray-800'>{item.name}</h3>
+          <p className='text-sm '>{item.link}</p>
         </div>
 
-        <div className="flex items-center shadow-border rounded-md">
-          <Button variant="secondary" onClick={handleRemove}>
+        <div className='flex items-center shadow-border rounded-md'>
+          <Button variant='secondary' onClick={handleRemove}>
             Usuń
           </Button>
-          <span className="h-9 w-px bg-border" aria-hidden="true" />
-          <Button variant="secondary" onClick={handleEditItem}>
+          <span className='h-9 w-px bg-border' aria-hidden='true' />
+          <Button variant='secondary' onClick={handleEditItem}>
             Edytuj
           </Button>
-          <span className="h-9 w-px bg-border" aria-hidden="true" />
-          <Button variant="secondary" onClick={addNewItem}>
+          <span className='h-9 w-px bg-border' aria-hidden='true' />
+          <Button variant='secondary' onClick={addNewItem}>
             Dodaj pozycję menu
           </Button>
         </div>
@@ -353,13 +361,13 @@ export const OverlayItem = ({ id, fields, depth }: OverlayItemProps) => {
 
   return (
     <div
-      className="flex p-5 bg-white shadow-border mb-[1px] h-20 opacity-70 overflow-hidden"
+      className='flex p-5 bg-white shadow-border mb-[1px] h-20 opacity-70 overflow-hidden'
       style={{ transform: depth > 0 ? `translateX(64px)` : "translateX(0)" }}
     >
-      <div className="flex items-center justify-between w-full">
+      <div className='flex items-center justify-between w-full'>
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-          <p className="text-sm ">{item.link}</p>
+          <h3 className='text-lg font-semibold text-gray-800'>{item.name}</h3>
+          <p className='text-sm '>{item.link}</p>
         </div>
       </div>
     </div>
